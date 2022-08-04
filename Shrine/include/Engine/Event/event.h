@@ -11,11 +11,10 @@ namespace shrine::event
 enum Type
 {
     GENERIC, 
-    KEY_PRESSED
+    KEY_PRESSED,
+    KEY_RELEASED,
+    KEY_REPEATED,
 };
-
-// TEMPORARY
-#define BIT(x) (1 << x)
 
 // TEMPORARY maybe
 #define CATEGORY_KEYBOARD_EVENT BIT(1)
@@ -23,18 +22,21 @@ enum Type
 #define CATEGORY_WINDOW_EVENT BIT(3)
 
 // TEMPORARY
-#define STATIC_EVENT_INITIALIZE(x) static inline Type type() { return Type::x; }
+#define EVENT_INITIALIZE(t) static inline shrine::event::Type eventType() { return t; }
 
 // TODO: Implement Event System
 class SHRINE_API IEvent
 {    
 protected:
-    IEvent() = default;
+    uint16_t m_Categories = 1; // category bitmask
+    
+protected:
+    IEvent(uint16_t categories);
     virtual ~IEvent() = default;
 
 public:
-    STATIC_EVENT_INITIALIZE(GENERIC)
-    virtual Type getType() const = 0;
+    EVENT_INITIALIZE(Type::GENERIC);
+    bool ofCategory(uint16_t category);
 };
 
 }; // shrine::event 

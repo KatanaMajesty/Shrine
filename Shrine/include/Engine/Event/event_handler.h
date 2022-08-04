@@ -20,7 +20,6 @@ public:
     using listener_pointer = shrine::SharedPointer<Listener>;
     using listener_registry = std::vector<listener_pointer>;
 private:
-    // std::queue<IEvent> m_EventQueue;
     listener_registry m_ListenerRegistry;
 public:
     // T - Listener type
@@ -32,23 +31,14 @@ public:
     // Implement listener drop function, that removes listener from registry
     // void dropListener();
 
-    template<typename E, typename... Args> void pushEvent(Args&&... args) { // No implementation now
-        // Add check "isEvent : true_type / false_type" 
-        // m_EventQueue.emplace(std::forward<Args>(args)...);
-    }
-
     template<typename E, typename... Args> void callEvent(Args&&... args) {
         // Add check "isEvent : true_type / false_type" 
         E event = E(std::forward<Args>(args)...); // SFINAE for IEvent
         for (const listener_pointer& pointer : m_ListenerRegistry) {
             Listener& listener = *pointer;
-            listener.handleCallbacks(E::type(), static_cast<IEvent&>(event));
+            listener.handleCallbacks(E::eventType(), static_cast<IEvent&>(event));
         }
     }
-
-    // void handleAll();
-    // return false if no events left to handle, otherwise true
-    // bool handle();
 };
 
 }; // shrine::event
