@@ -1,22 +1,25 @@
 #include "Engine/window.h"
 
-#include "Engine/Event/key_pressed_event.h"
+#include <functional>
 
-#include <iostream>
+#include "Engine/Utility/logger.h"
+#include "Engine/Event/key_pressed_event.h"
+#include "Engine/Event/key_released_event.h"
+#include "Engine/Event/key_repeated_event.h"
 
 // TODO: Remove glfw functions from window
 // TODO: Abstract OpenGL into renderer context 
-
 namespace shrine
 {
      
-WindowAttributes::WindowAttributes(const std::string& name, uint32_t width, u_int32_t height)
-    : name(name), width(width), height(height)
+WindowAttributes::WindowAttributes(const std::string& name, uint32_t width, u_int32_t height, bool vsync)
+    : name(name), width(width), height(height), vsync(vsync)
 {
 }
 
 Window::Window(const WindowAttributes& attributes)
-    : m_Window(nullptr), m_Attributes(attributes)
+    : m_InternalAttrib{.glfwWindow = nullptr, .shrineShouldClose = false}
+    , m_Attributes(attributes)
 {
     if (!glfwInit()) {
         Logger::tryBoundLog(LogLevel::Critical, "Failed to initailize GLFW");
@@ -25,44 +28,29 @@ Window::Window(const WindowAttributes& attributes)
 
 Window::~Window() {
     close();
+    glfwDestroyWindow(getGLFWwindow());
 
     // GLFW should not be terminated when window registry is implemented
     glfwTerminate(); // TODO: remove temporary solution
 }
 
-        // VERY TEMPORARY! Should be removed ASAP, was used for testing
-        // VERY TEMPORARY! Should be removed ASAP, was used for testing
-        // VERY TEMPORARY! Should be removed ASAP, was used for testing
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (action == GLFW_PRESS) {
-        Window& w = *(Window*)glfwGetWindowUserPointer(window);
-        w.m_EventHandler.callEvent<event::KeyPressedEvent>(key); // call event
-    }
-}
-
 void Window::open() {
-    if (m_Window) {
+    if (getGLFWwindow()) {
         close();
     }
 
-    m_Window = glfwCreateWindow(m_Attributes.width, m_Attributes.height, m_Attributes.name.c_str(), nullptr, nullptr);
-    if (!m_Window) {
+    m_InternalAttrib.glfwWindow = glfwCreateWindow(m_Attributes.width, m_Attributes.height, m_Attributes.name.c_str(), nullptr, nullptr);
+    if (!getGLFWwindow()) {
         Logger::tryBoundLog(LogLevel::Critical, "Failed to create a GLFW window");
     }
 
-    // VERY TEMPORARY! Should be removed ASAP, was used for testing
-    // VERY TEMPORARY! Should be removed ASAP, was used for testing
-    // VERY TEMPORARY! Should be removed ASAP, was used for testing
-    glfwSetWindowUserPointer(m_Window, this);
-    glfwSetKeyCallback(m_Window, key_callback);
+    Window::initializeWindowCallbacks(*this);
 
     updateGLFWContext();
     // TODO start: Refactor is needed
     if (glewInit() != GLEW_OK) {
         Logger::tryBoundLog(LogLevel::Critical, "Failed to initialize GLEW");
     } // TODO end
-    updateVsync(isVsync);
 
     while (!shouldBeClosed()) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -70,34 +58,64 @@ void Window::open() {
         
         getRenderer().render();
 
-        glfwSwapBuffers(m_Window);
+        glfwSwapBuffers(getGLFWwindow());
         glfwPollEvents();
     }
 }
 
 void Window::close() {
-    if (!m_Window) {
+    if (!getGLFWwindow()) {
         return;
     }
+
+    m_InternalAttrib.shrineShouldClose = true;
     // Should be checked
-    glfwSetWindowShouldClose(m_Window, true);
-    glfwDestroyWindow(m_Window);
     glfwMakeContextCurrent(nullptr);
 }
 
-renderer::Renderer& Window::getRenderer() { return m_Renderer; }
+WindowAttributes& Window::getAttributes() { return m_Attributes; }
 
-const renderer::Renderer& Window::getRenderer() const { return m_Renderer; }
+Window::renderer_type& Window::getRenderer() { return m_Renderer; }
+
+Window::event_handler_type& Window::getEventHandler() { return m_EventHandler; }
+
+Window::internal_window_type* Window::getGLFWwindow() { return m_InternalAttrib.glfwWindow; }
+
+Window::internal_window_type* Window::getGLFWwindow() const { return m_InternalAttrib.glfwWindow; }
+
+void Window::initializeWindowCallbacks(Window& window) {
+    glfwSetWindowUserPointer(window.getGLFWwindow(), &window);
+    glfwSetKeyCallback(window.getGLFWwindow(), Window::keyInputCallback);
+}
+
+void Window::keyInputCallback(internal_window_type* glfwWindow, int keycode, int scancode, int action, int mods) {
+    Window* context = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
+    if (!context) {
+        return;
+    }
+    if (action == GLFW_REPEAT) {
+        context->getEventHandler().callEvent<event::KeyRepeatedEvent>(*context, keycode);
+    } else if (action == GLFW_PRESS) {
+        context->getEventHandler().callEvent<event::KeyPressedEvent>(*context, keycode);
+    } else { // assert action is GLFW_RELEASE
+        context->getEventHandler().callEvent<event::KeyReleasedEvent>(*context, keycode);
+    }
+}
 
 void Window::updateGLFWContext() {
-    if (!m_Window) {
+    if (!getGLFWwindow()) {
         Logger::tryBoundLog(LogLevel::Error, "Couldn't update GLFW context for a window {}, detatching the context...", m_Attributes.name);
     }
-    glfwMakeContextCurrent(m_Window);
+    glfwMakeContextCurrent(getGLFWwindow());
 }
     
-void Window::updateVsync(bool isVsync) { glfwSwapInterval(isVsync); }
+void Window::setVsync(bool enabled) {
+     getAttributes().vsync = enabled; 
+     glfwSwapInterval(enabled);
+}
 
-bool Window::shouldBeClosed() const { return glfwWindowShouldClose(m_Window); }
+bool Window::shouldBeClosed() const { 
+    return m_InternalAttrib.shrineShouldClose || glfwWindowShouldClose(getGLFWwindow()); 
+}
 
 } // shrine

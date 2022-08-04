@@ -7,7 +7,6 @@
 #include <GLFW/glfw3.h>
 
 #include "Engine/core.h"
-#include "Engine/Utility/logger.h"
 #include "Engine/Renderer/renderer.h"
 #include "Engine/Event/event_handler.h"
 
@@ -19,40 +18,57 @@ struct SHRINE_API WindowAttributes
     std::string name;
     uint32_t width;
     uint32_t height;
+    bool vsync;
 
     WindowAttributes(const std::string& name = "Shrine Application", 
-                    uint32_t width = 1280, u_int32_t height = 720);
+                    uint32_t width = 1280, u_int32_t height = 720, bool vsync = true);
+};
+
+struct WinInternalAttr
+{
+    GLFWwindow* glfwWindow;
+    bool shrineShouldClose = false;
 };
 
 class SHRINE_API Window
 {
+public:
+    using renderer_type = renderer::Renderer;
+    using internal_window_type = GLFWwindow;
+    using event_handler_type = event::Handler;
+
 private:
-    GLFWwindow* m_Window;
-    bool isVsync = true; // true by default (maybe change in future) // should be moved to WindowAttributes
-    const WindowAttributes m_Attributes;
-    renderer::Renderer m_Renderer;
+    WinInternalAttr m_InternalAttrib;
+    WindowAttributes m_Attributes;
+    renderer_type m_Renderer; // no implementation
+    event_handler_type m_EventHandler;
 
 public:
-    event::Handler m_EventHandler; // temp
     Window(const WindowAttributes& attributes);
     ~Window();
 
-    inline const WindowAttributes& attributes() const { return m_Attributes; }
-
     void open();
     void close();
+    void setVsync(bool isVsync);
 
-    renderer::Renderer& getRenderer();
-    const renderer::Renderer& getRenderer() const;
+    WindowAttributes& getAttributes();
+    renderer_type& getRenderer();
+    event_handler_type& getEventHandler();
 private:
+    internal_window_type* getGLFWwindow();
+    internal_window_type* getGLFWwindow() const;
+
+    static void initializeWindowCallbacks(Window& window);
+    static void keyInputCallback(internal_window_type* glfwWindow, int keycode, int scancode, int action, int mods);
+
     void updateGLFWContext();
-    void updateVsync(bool isVsync);
-    bool shouldBeClosed() const;
+    bool shouldBeClosed() const; // will never be used by user, as there is WindowAttributes getter
 };
 
 // TODO: Implement window registry, that will hold all currently opened and bound to Shrine windows
 //      It should be responsible for opening, closing and returning window contexts to API/Engine
 //      Maybe it should be moved into separate file/class called Registry<T>?
+//      Registry should also be concurrent, as every window, probably, will be ran on separate thread
 class WindowRegistry
 {
     // No implementation

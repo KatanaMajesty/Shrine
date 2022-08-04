@@ -44,7 +44,7 @@ public:
 
 private:
     SharedPointer<spdlog::logger> m_Logger; // spdlog instance
-    static pointer m_BoundLogger; // Currently bound logger
+    static pointer s_BoundLogger; // Currently bound logger
 
 public:
     Logger(const std::string& name);
@@ -71,7 +71,8 @@ public:
     static pointer  getBoundLogger();
 
 private:
-    spdlog::level::level_enum toSPDLevel(LogLevel level);
+    static spdlog::level::level_enum toSPDLevel(LogLevel level);
+    static LogLevel fromSPDLevel(spdlog::level::level_enum level);
 };
 
 }; // shrine

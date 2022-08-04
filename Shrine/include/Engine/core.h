@@ -13,4 +13,6 @@
     #endif
 #endif
 
+#define BIT(x) (1 << x)
+
 #endif // __SHRINE_ENGINE_CORE_H__
