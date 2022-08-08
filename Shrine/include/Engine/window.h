@@ -24,11 +24,29 @@ struct SHRINE_API WindowAttributes
                     uint32_t width = 1280, u_int32_t height = 720, bool vsync = true);
 };
 
+
+
 struct WinInternalAttr
 {
     GLFWwindow* glfwWindow;
     bool shrineShouldClose = false;
 };
+
+
+
+class WindowListener : public event::Listener
+{
+public:
+    WindowListener();
+
+    static bool onKeyPressed(event::IEvent& e);
+
+    static bool onKeyReleased(event::IEvent& e);
+
+    static bool onKeyRepeated(event::IEvent& e);
+}; // WindowListener class
+
+
 
 class SHRINE_API Window
 {
@@ -40,8 +58,10 @@ public:
 private:
     WinInternalAttr m_InternalAttrib;
     WindowAttributes m_Attributes;
-    renderer_type m_Renderer; // no implementation
+    // This order of handler and listener is important. Should be rewritten to use better architecture
     event_handler_type m_EventHandler;
+    ref_t<WindowListener> m_EventListener;
+    renderer_type m_Renderer; // no implementation
 
 public:
     Window(const WindowAttributes& attributes);
@@ -63,7 +83,7 @@ private:
 
     void updateGLFWContext();
     bool shouldBeClosed() const; // will never be used by user, as there is WindowAttributes getter
-};
+}; // Window class
 
 // TODO: Implement window registry, that will hold all currently opened and bound to Shrine windows
 //      It should be responsible for opening, closing and returning window contexts to API/Engine

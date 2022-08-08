@@ -13,7 +13,7 @@ namespace shrine
 class SHRINE_API Application
 {
 private:
-    Logger m_Logger;
+    ref_t<Logger> m_Logger;
     Window m_Window;
 
 protected:
@@ -27,8 +27,11 @@ public:
 
     virtual void run() = 0;
 
-    virtual Logger&         getLogger();
-    virtual const Logger&   getLogger() const;
+    // This member-function will be used to create a logger when constructing an application
+    virtual ref_t<Logger> createLogger(const std::string& identifier);
+
+    virtual inline Logger& getLogger() { return m_Logger.get(); }
+    virtual inline const Logger& getLogger() const { return m_Logger.get(); }
 };
 
 }; // shrine

@@ -2,13 +2,13 @@
 
 #include <functional>
 
+// temp
 #include "Engine/Utility/logger.h"
+#include "Engine/Utility/keyboard.h"
 #include "Engine/Event/key_pressed_event.h"
 #include "Engine/Event/key_released_event.h"
 #include "Engine/Event/key_repeated_event.h"
 
-// TODO: Remove glfw functions from window
-// TODO: Abstract OpenGL into renderer context 
 namespace shrine
 {
      
@@ -17,12 +17,56 @@ WindowAttributes::WindowAttributes(const std::string& name, uint32_t width, u_in
 {
 }
 
+
+
+/* ============================== */
+/* WINDOW LISTENER IMPLEMENTATION */
+/* ============================== */
+
+WindowListener::WindowListener()
+{
+    // use Listener's addCallback member-function
+    event::Listener::addCallback(event::Type::KEY_PRESSED, WindowListener::onKeyPressed);
+    event::Listener::addCallback(event::Type::KEY_RELEASED, WindowListener::onKeyReleased);
+    event::Listener::addCallback(event::Type::KEY_REPEATED, WindowListener::onKeyRepeated);
+}
+
+bool WindowListener::onKeyPressed(event::IEvent& e) {
+    event::KeyPressedEvent& event = static_cast<event::KeyPressedEvent&>(e); // assert this, should be okay
+    SHR_LOG_CORE(LogLevel::Debug, "KeyPressedEvent with keyCode: {}", event.getKeycode());
+    return false; // shouldn't be handled, just logged
+}
+
+bool WindowListener::onKeyReleased(event::IEvent& e) {
+    event::KeyReleasedEvent& event = static_cast<event::KeyReleasedEvent&>(e); // assert this, should be okay
+    SHR_LOG_CORE(LogLevel::Debug, "KeyReleasedEvent with keyCode: {}", event.getKeycode());
+    if (event.getKeycode() == SHR_KEY_ESCAPE) {
+        event.getWindow().close();
+        return true;
+    }
+    return false;
+}
+
+bool WindowListener::onKeyRepeated(event::IEvent& e) {
+    event::KeyRepeatedEvent& event = static_cast<event::KeyRepeatedEvent&>(e); // assert this, should be okay
+    SHR_LOG_CORE(LogLevel::Debug, "KeyRepeatedEvent with keyCode: {}", event.getKeycode());
+    return false; // shouldn't be handled, just logged
+}
+
+
+
+/* ===================== */
+/* WINDOW IMPLEMENTATION */
+/* ===================== */
+
 Window::Window(const WindowAttributes& attributes)
     : m_InternalAttrib{.glfwWindow = nullptr, .shrineShouldClose = false}
     , m_Attributes(attributes)
+    , m_EventHandler() // <- Dirty, but should be defined BEFORE WindowListener is created
+    , m_EventListener(m_EventHandler.makeListener<WindowListener>())
 {
     if (!glfwInit()) {
-        Logger::tryBoundLog(LogLevel::Critical, "Failed to initailize GLFW");
+        SHR_LOG_CORE(LogLevel::Critical, "Failed to initailize GLFW");
     }
 }
 
@@ -41,7 +85,7 @@ void Window::open() {
 
     m_InternalAttrib.glfwWindow = glfwCreateWindow(m_Attributes.width, m_Attributes.height, m_Attributes.name.c_str(), nullptr, nullptr);
     if (!getGLFWwindow()) {
-        Logger::tryBoundLog(LogLevel::Critical, "Failed to create a GLFW window");
+        SHR_LOG_CORE(LogLevel::Critical, "Failed to create a GLFW window");
     }
 
     Window::initializeWindowCallbacks(*this);
@@ -49,7 +93,7 @@ void Window::open() {
     updateGLFWContext();
     // TODO start: Refactor is needed
     if (glewInit() != GLEW_OK) {
-        Logger::tryBoundLog(LogLevel::Critical, "Failed to initialize GLEW");
+        SHR_LOG_CORE(LogLevel::Critical, "Failed to initialize GLEW");
     } // TODO end
 
     while (!shouldBeClosed()) {
@@ -104,7 +148,7 @@ void Window::keyInputCallback(internal_window_type* glfwWindow, int keycode, int
 
 void Window::updateGLFWContext() {
     if (!getGLFWwindow()) {
-        Logger::tryBoundLog(LogLevel::Error, "Couldn't update GLFW context for a window {}, detatching the context...", m_Attributes.name);
+        SHR_LOG_CORE(LogLevel::Error, "Couldn't update GLFW context for a window {}, detatching the context...", m_Attributes.name);
     }
     glfwMakeContextCurrent(getGLFWwindow());
 }

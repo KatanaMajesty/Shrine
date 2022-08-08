@@ -10,7 +10,7 @@ void Listener::addCallback(Listener::event_type type, Listener::callback_type ca
 bool Listener::handleCallbacks(event_type type, IEvent& event) const {
     Listener::event_callbacks::const_iterator iter = m_Callbacks.find(type);
     if (iter != m_Callbacks.end()) {
-        return iter->second.operator()(event); // call a callback to event
+        return std::invoke(iter->second, event); // call a callback to event
     }
     return true; // all event_callbacks were handled correctly
 }

@@ -6,12 +6,11 @@ namespace shrine
 {
 
 Application::Application()
-    : m_Logger("SHR_APP_LOG"), m_Window({}) // <- window constructor is temporary
+    : m_Logger(createLogger("SHR_LOGGER")), m_Window({}) // <- window constructor is temporary
 {
 }
 
-Logger& Application::getLogger() { return m_Logger; }
-const Logger& Application::getLogger() const { return m_Logger; }
+ref_t<Logger> Application::createLogger(const std::string& identifier) { return Logger::createLogger<Logger>(SHR_LOGGER_CORE, identifier); }
 
 }; // shrine
 
