@@ -3,8 +3,8 @@
 namespace shrine::event
 {
 
-void Handler::popListener() { m_ListenerRegistry.pop_back(); }
+void Handler::popListener() { m_listenerRegistry.pop_back(); }
 
-void Handler::clearRegistry() { m_ListenerRegistry.clear(); }
+void Handler::clearRegistry() { m_listenerRegistry.clear(); }
 
 }; // shrine::event

@@ -1,4 +1,4 @@
-#include "Engine/application.h"
+#include "Engine/Common/application.h"
 
 #include <iostream>
 
@@ -6,7 +6,7 @@ namespace shrine
 {
 
 Application::Application()
-    : m_Logger(createLogger("SHR_LOGGER")), m_Window({}) // <- window constructor is temporary
+    : m_logger(createLogger("SHR_LOGGER")), m_window({}) // <- window constructor is temporary
 {
 }
 

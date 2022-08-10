@@ -2,7 +2,6 @@
 
 #include <shrine.h>
 
-
 namespace shrine
 {
 

@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "Engine/core.h"
-#include "Engine/window.h"
+#include "Engine/Common/common_definitions.h"
+#include "Engine/Common/window.h"
 #include "Engine/Utility/logger.h"
 
 namespace shrine
@@ -13,11 +13,11 @@ namespace shrine
 class SHRINE_API Application
 {
 private:
-    ref_t<Logger> m_Logger;
-    Window m_Window;
+    ref_t<Logger> m_logger;
+    Window m_window;
 
 protected:
-    inline Window& getWindow() { return m_Window; }
+    inline Window& getWindow() { return m_window; }
 
 public:
 
@@ -30,8 +30,8 @@ public:
     // This member-function will be used to create a logger when constructing an application
     virtual ref_t<Logger> createLogger(const std::string& identifier);
 
-    virtual inline Logger& getLogger() { return m_Logger.get(); }
-    virtual inline const Logger& getLogger() const { return m_Logger.get(); }
+    virtual inline Logger& getLogger() { return m_logger.get(); }
+    virtual inline const Logger& getLogger() const { return m_logger.get(); }
 };
 
 }; // shrine

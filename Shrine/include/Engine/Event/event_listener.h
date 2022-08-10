@@ -5,7 +5,7 @@
 #include <string>
 #include <functional>
 
-#include "Engine/core.h"
+#include "Engine/Common/common_definitions.h"
 #include "Engine/Event/event.h"
 
 namespace shrine::event
@@ -19,7 +19,7 @@ public:
     using event_callbacks = std::unordered_map<event_type, callback_type>;
 
 private:
-    event_callbacks m_Callbacks;
+    event_callbacks m_callbacks;
 
 public:
     Listener() = default;

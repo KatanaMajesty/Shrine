@@ -1,7 +1,7 @@
 #ifndef __SHRINE_ENTRY_H__
 #define __SHRINE_ENTRY_H__
 
-#include "Engine/application.h"
+#include "Engine/Common/application.h"
 #include "Engine/Utility/logger.h"
 
 namespace shrine

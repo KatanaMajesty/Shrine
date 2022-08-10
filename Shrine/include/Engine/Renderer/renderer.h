@@ -2,7 +2,7 @@
 #define __SHRINE_ENGINE_RENDERER_RENDERER_H__
 
 #include "Engine/Renderer/layer_queue.h"
-#include "Engine/core.h"
+#include "Engine/Common/common_definitions.h"
 
 namespace shrine::renderer
 {

@@ -1,7 +1,5 @@
 #include "Engine/Renderer/renderer.h"
 
-#include <iostream>
-
 namespace shrine::renderer
 {
 

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Engine/core.h"
+#include "Engine/Common/common_definitions.h"
 #include "Engine/Utility/pointer.h"
 #include "Engine/Event/event.h"
 #include "Engine/Event/event_listener.h"
@@ -24,11 +24,11 @@ public:
     using listener_registry = std::vector<listener_pointer>;
     
 private:
-    listener_registry m_ListenerRegistry;
+    listener_registry m_listenerRegistry;
 public:
-    template<typename ListenerType, typename... Args> 
-    enableIf_type<isListener<ListenerType>::value, ListenerType&> makeListener(Args&&... args) {
-        return static_cast<ListenerType&>(*m_ListenerRegistry.emplace_back(makeScoped<ListenerType>(std::forward<Args>(args)...)));
+    template<typename T, typename... Args> 
+    enableIf_type<isListener<T>::value, T&> makeListener(Args&&... args) {
+        return static_cast<T&>(*m_listenerRegistry.emplace_back(makeScoped<T>(std::forward<Args>(args)...)));
     }
 
     // Listener drop function, that removes listener from registry
@@ -40,7 +40,7 @@ public:
     template<typename E, typename... Args> 
     enableIf_type<isEvent<E>::value> callEvent(Args&&... args) {
         E event(std::forward<Args>(args)...); // SFINAE for IEvent
-        for (const listener_pointer& pointer : m_ListenerRegistry) {
+        for (const listener_pointer& pointer : m_listenerRegistry) {
             Listener& listener = *pointer;
             listener.handleCallbacks(E::eventType(), static_cast<IEvent&>(event));
         }

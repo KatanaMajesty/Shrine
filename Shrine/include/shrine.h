@@ -8,9 +8,9 @@
 #include "Engine/Utility/pointer.h"
 #include "Engine/Utility/logger.h"
 
-#include "Engine/core.h"
-#include "Engine/window.h"
-#include "Engine/application.h"
+#include "Engine/Common/common_definitions.h"
+#include "Engine/Common/window.h"
+#include "Engine/Common/application.h"
 
 #include "Engine/Event/event.h"
 #include "Engine/Event/event_listener.h"

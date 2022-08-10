@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "Engine/core.h"
+#include "Engine/Common/common_definitions.h"
 
 namespace shrine::event
 {
@@ -11,9 +11,17 @@ namespace shrine::event
 enum Type
 {
     GENERIC, 
+
     KEY_PRESSED,
     KEY_RELEASED,
     KEY_REPEATED,
+
+    WINDOW_FULLSCREEN_TOGGLED,
+    WINDOW_CLOSED,
+    WINDOW_OPENED,
+    WINDOW_RESIZED,
+    WINDOW_FRAMEBUFFER_RESIZED,
+    WINDOW_TITLE_CHANGED,
 };
 
 // TEMPORARY maybe
@@ -28,7 +36,7 @@ enum Type
 class SHRINE_API IEvent
 {    
 protected:
-    uint16_t m_Categories = 1; // category bitmask
+    uint16_t m_categories = 1; // category bitmask
     
 protected:
     IEvent(uint16_t categories);

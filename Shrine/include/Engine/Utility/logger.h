@@ -7,7 +7,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "Engine/core.h"
+#include "Engine/Common/common_definitions.h"
 #include "Engine/Utility/pointer.h"
 
 /**
@@ -64,11 +64,11 @@ public:
 private:
     template<typename T> struct isLogger : isBaseOf<Logger, T> {};
 
-    static logger_registry_type s_LoggerRegistry;
+    static logger_registry_type s_loggerRegistry;
     
 // Non-static class members
 private:
-    SharedPointer<spdlog::logger> m_Logger; // spdlog instance
+    SharedPointer<spdlog::logger> m_logger; // spdlog instance
     
 public:
     Logger(const std::string& identifier);
@@ -77,7 +77,7 @@ public:
     // Wont replace the old logger of the same type, if found one
     template<typename T, typename... Args> 
     static enableIf_type<isLogger<T>::value, T&> createLogger(logger_id_type type, Args&&... args) {
-        return static_cast<T&>(*s_LoggerRegistry.try_emplace(type, makeShared<T>(std::forward<Args>(args)...)).first->second);
+        return static_cast<T&>(*s_loggerRegistry.try_emplace(type, makeShared<T>(std::forward<Args>(args)...)).first->second);
     }
 
     static pointer_type getLogger(logger_id_type type);
@@ -93,7 +93,7 @@ public:
 // class member-functions
 public:
     template<typename... Args> void log(LogLevel level, format_string_t<Args...> message, Args&&... args) {
-        m_Logger->log(Logger::toSPDLevel(level), message, std::forward<Args>(args)...);
+        m_logger->log(Logger::toSPDLevel(level), message, std::forward<Args>(args)...);
     }
 
     // Set logging level of this logger instance
