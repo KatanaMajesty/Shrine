@@ -13,4 +13,4 @@
     #define SHR_ASSERT(expr, msg, ...)
 #endif // !defined(SHR_NASSERT)
 
-#endif __SHRINE_ENGINE_COMMON_ASSERT_H__
+#endif // __SHRINE_ENGINE_COMMON_ASSERT_H__

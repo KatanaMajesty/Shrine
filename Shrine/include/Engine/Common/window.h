@@ -18,10 +18,11 @@ struct SHRINE_API WindowAttributes
     std::string title;
     uint32_t width;
     uint32_t height;
+    bool fullscreen;
     bool vsync;
 
     WindowAttributes(const std::string& title = "Shrine Application", 
-                    uint32_t width = 1280, u_int32_t height = 720, bool vsync = true);
+                    uint32_t width = 1280, u_int32_t height = 720, bool fullscreen = false, bool vsync = true);
 };
 
 
@@ -30,6 +31,8 @@ struct WinInternalAttr
 {
     GLFWwindow* glfwWindow;
     bool shrineShouldClose = false;
+    int32_t posX; // Window position on screen
+    int32_t posY; // Window position on screen
 };
 
 
@@ -62,6 +65,8 @@ class SHRINE_API Window
 public:
     using renderer_type = renderer::Renderer;
     using internal_window_type = GLFWwindow;
+    using internal_monitor_type = GLFWmonitor;
+    using internal_vidmode_type = GLFWvidmode;
     using event_handler_type = event::Handler;
 
 private:
@@ -86,6 +91,11 @@ public:
 
     void setTitle(const std::string& title);
     void setTitle(std::string&& title);
+
+    void goFullscreen();
+    void goWindowed();
+    // no support for this now
+    // void goWindowedFullscreen();
 private:
     internal_window_type* getGLFWwindow();
     internal_window_type* getGLFWwindow() const;
@@ -96,6 +106,8 @@ private:
     static void windowSizeCallback(internal_window_type* glfwWindow, int width, int height);
     static void windowFramebufferSizeCallback(internal_window_type* glfwWindow, int width, int height);
 
+    // updates internal attributes posX and posY of a window
+    void updatePosition();
     void updateGLFWContext();
     bool shouldBeClosed() const; // will never be used by user, as there is WindowAttributes getter
 }; // Window class

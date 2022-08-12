@@ -1,5 +1,3 @@
-#include <memory>
-
 #include <shrine.h>
 
 namespace shrine

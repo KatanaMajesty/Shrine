@@ -6,12 +6,13 @@
 #include "Engine/Utility/keyboard.h"
 #include "Engine/Event/input_events.h"
 #include "Engine/Event/window_events.h"
+#include "Engine/Common/assert.h"
 
 namespace shrine
 {
      
-WindowAttributes::WindowAttributes(const std::string& title, uint32_t width, u_int32_t height, bool vsync)
-    : title(title), width(width), height(height), vsync(vsync)
+WindowAttributes::WindowAttributes(const std::string& title, uint32_t width, u_int32_t height, bool fullscreen, bool vsync)
+    : title(title), width(width), height(height), fullscreen(fullscreen), vsync(vsync)
 {
 }
 
@@ -38,6 +39,22 @@ WindowListener::WindowListener()
 
 bool WindowListener::onKeyPressed(event::IEvent& e) {
     event::KeyPressedEvent& event = static_cast<event::KeyPressedEvent&>(e); // assert this, should be okay
+
+    // fullscreen mode
+    if (event.getKeycode() == SHR_KEY_F11) {
+        Window& window = event.getWindow();
+        bool& fullscreen = window.getAttributes().fullscreen;
+        fullscreen = !fullscreen;
+
+        window.getEventHandler().callEvent<event::WindowFullscreenToggledEvent>(window, fullscreen);
+        
+        if (fullscreen) {
+            window.goFullscreen();
+        } else {
+            window.goWindowed();
+        }
+    }
+    
     SHR_LOG_CORE(LogLevel::Debug, "KeyPressedEvent with keyCode: {}", event.getKeycode());
     return false; // shouldn't be handled, just logged
 }
@@ -72,7 +89,7 @@ Window::Window(const WindowAttributes& attributes)
 {
     if (!glfwInit()) {
         SHR_LOG_CORE(LogLevel::Critical, "Failed to initailize GLFW");
-    }
+    }    
 }
 
 Window::~Window() {
@@ -102,6 +119,9 @@ void Window::open() {
     } // TODO end
 
     getEventHandler().callEvent<event::WindowOpenedEvent>(*this);
+
+    // // temp
+    // glfwGetWindowPos(getGLFWwindow(), &m_posX, &m_posY);
 
     while (!shouldBeClosed()) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -141,6 +161,28 @@ void Window::setTitle(std::string&& title) {
     m_attributes.title = std::move(title);
     getEventHandler().callEvent<event::WindowTitleChangedEvent>(*this, m_attributes.title);
 }
+
+// temporary window-mode implementation
+void Window::goFullscreen() {
+    internal_window_type* window = getGLFWwindow();
+    SHR_ASSERT(window != nullptr);
+    internal_monitor_type* monitor = glfwGetPrimaryMonitor();
+    const internal_vidmode_type* mode = glfwGetVideoMode(monitor);
+    updatePosition();
+    glfwSetWindowMonitor(window, monitor, 0, 0, getAttributes().width, getAttributes().height, mode->refreshRate);
+}
+
+void Window::goWindowed() {
+    internal_window_type* window = getGLFWwindow();
+    SHR_ASSERT(window != nullptr);
+    int32_t width = getAttributes().width;
+    int32_t height = getAttributes().height;
+    glfwSetWindowMonitor(window, nullptr, m_internalAttrib.posX, m_internalAttrib.posY, width, height, 0); // refresh rate is ignored, as monitor is nullptr
+}
+
+// void Window::goWindowedFullscreen() {
+//     // noimpl
+// }
 
 Window::internal_window_type* Window::getGLFWwindow() { return m_internalAttrib.glfwWindow; }
 
@@ -189,6 +231,10 @@ void Window::windowFramebufferSizeCallback(internal_window_type* glfwWindow, int
         return;
     }
     context->getEventHandler().callEvent<event::WindowFramebufferChangedEvent>(*context, (uint16_t)width, (uint16_t)height);
+}
+
+void Window::updatePosition() {
+    glfwGetWindowPos(getGLFWwindow(), &m_internalAttrib.posX, &m_internalAttrib.posY);
 }
 
 void Window::updateGLFWContext() {
