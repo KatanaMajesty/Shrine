@@ -8,7 +8,7 @@ Logger::logger_registry_type Logger::s_loggerRegistry;
 Logger::Logger(const std::string& name)
     : m_logger(spdlog::stdout_color_mt(name)) 
 {
-    m_logger->set_pattern("[%n] [%T %l]: %v");
+    m_logger->set_pattern("%^[%n] [%T %l]:%$ %v");
 }
 
 Logger::pointer_type Logger::getLogger(Logger::logger_id_type type) {

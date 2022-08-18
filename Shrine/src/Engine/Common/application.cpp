@@ -1,12 +1,12 @@
 #include "Engine/Common/application.h"
 
-#include <iostream>
-
 namespace shrine
 {
 
 Application::Application()
-    : m_logger(createLogger("SHR_LOGGER")), m_window({}) // <- window constructor is temporary
+    : m_logger(createLogger("SHR_LOGGER"))
+    , m_eventBus(makeScoped<Application::event_bus_type>())
+    , m_window(makeScoped<Application::window_type>(m_eventBus, WindowAttributes{}))
 {
 }
 

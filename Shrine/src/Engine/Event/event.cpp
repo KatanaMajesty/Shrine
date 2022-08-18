@@ -3,8 +3,18 @@
 namespace shrine::event
 {
 
-IEvent::IEvent(uint16_t categories) { m_categories |= categories; }
+Event::Event(uint16_t categories) 
+{ 
+    m_categories |= categories; 
+}
 
-bool IEvent::ofCategory(uint16_t category) { return (m_categories & category) == category; }
+bool Event::ofCategory(uint16_t category) { 
+    return (m_categories & category) == category; 
+}
+
+CancellableEvent::CancellableEvent(uint16_t categories) 
+    : Event(m_categories) 
+{
+}
 
 }; // shrine::event

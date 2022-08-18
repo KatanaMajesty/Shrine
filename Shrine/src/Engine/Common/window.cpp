@@ -1,7 +1,5 @@
 #include "Engine/Common/window.h"
 
-#include <functional>
-
 #include "Engine/Utility/logger.h"
 #include "Engine/Utility/keyboard.h"
 #include "Engine/Event/input_events.h"
@@ -18,74 +16,13 @@ WindowAttributes::WindowAttributes(const std::string& title, uint32_t width, u_i
 
 
 
-/* ============================== */
-/* WINDOW LISTENER IMPLEMENTATION */
-/* ============================== */
-
-WindowListener::WindowListener()
-{
-    // use Listener's addCallback member-function
-    event::Listener::addCallback(event::Type::KEY_PRESSED, WindowListener::onKeyPressed);
-    event::Listener::addCallback(event::Type::KEY_RELEASED, WindowListener::onKeyReleased);
-    event::Listener::addCallback(event::Type::KEY_REPEATED, WindowListener::onKeyRepeated);
-    // TODO: implement
-    // event::Listener::addCallback(event::Type::WINDOW_FULLSCREEN_TOGGLED, WindowListener::onWindowFullscreenToggled);
-    // event::Listener::addCallback(event::Type::WINDOW_CLOSED, WindowListener::onWindowClosed);
-    // event::Listener::addCallback(event::Type::WINDOW_OPENED, WindowListener::onWindowOpened);
-    // event::Listener::addCallback(event::Type::WINDOW_RESIZED, WindowListener::onWindowSizeChanged);
-    // event::Listener::addCallback(event::Type::WINDOW_FRAMEBUFFER_RESIZED, WindowListener::onWindowFramebufferChanged);
-    // event::Listener::addCallback(event::Type::WINDOW_TITLE_CHANGED, WindowListener::onWindowTitleChanged);
-}
-
-bool WindowListener::onKeyPressed(event::IEvent& e) {
-    event::KeyPressedEvent& event = static_cast<event::KeyPressedEvent&>(e); // assert this, should be okay
-
-    // fullscreen mode
-    if (event.getKeycode() == SHR_KEY_F11) {
-        Window& window = event.getWindow();
-        bool& fullscreen = window.getAttributes().fullscreen;
-        fullscreen = !fullscreen;
-
-        window.getEventHandler().callEvent<event::WindowFullscreenToggledEvent>(window, fullscreen);
-        
-        if (fullscreen) {
-            window.goFullscreen();
-        } else {
-            window.goWindowed();
-        }
-    }
-    
-    SHR_LOG_CORE(LogLevel::Debug, "KeyPressedEvent with keyCode: {}", event.getKeycode());
-    return false; // shouldn't be handled, just logged
-}
-
-bool WindowListener::onKeyReleased(event::IEvent& e) {
-    event::KeyReleasedEvent& event = static_cast<event::KeyReleasedEvent&>(e); // assert this, should be okay
-    SHR_LOG_CORE(LogLevel::Debug, "KeyReleasedEvent with keyCode: {}", event.getKeycode());
-    if (event.getKeycode() == SHR_KEY_ESCAPE) {
-        event.getWindow().close();
-        return true;
-    }
-    return false;
-}
-
-bool WindowListener::onKeyRepeated(event::IEvent& e) {
-    event::KeyRepeatedEvent& event = static_cast<event::KeyRepeatedEvent&>(e); // assert this, should be okay
-    SHR_LOG_CORE(LogLevel::Debug, "KeyRepeatedEvent with keyCode: {}", event.getKeycode());
-    return false; // shouldn't be handled, just logged
-}
-
-
-
 /* ===================== */
 /* WINDOW IMPLEMENTATION */
 /* ===================== */
-
-Window::Window(const WindowAttributes& attributes)
+Window::Window(const ref_t<ScopedPointer<event_bus_type>>& eventBus, const WindowAttributes& attributes)
     : m_internalAttrib{.glfwWindow = nullptr, .shrineShouldClose = false}
     , m_attributes(attributes)
-    , m_eventHandler() // <- Dirty, but should be defined BEFORE WindowListener is created
-    , m_eventListener(m_eventHandler.makeListener<WindowListener>())
+    , m_eventBus(eventBus)
 {
     if (!glfwInit()) {
         SHR_LOG_CORE(LogLevel::Critical, "Failed to initailize GLFW");
@@ -93,7 +30,8 @@ Window::Window(const WindowAttributes& attributes)
 }
 
 Window::~Window() {
-    close();
+    // close(); <- this calls WindowClosedEvent twice, which should be avoided
+    glfwMakeContextCurrent(nullptr);
     glfwDestroyWindow(getGLFWwindow());
 
     // GLFW should not be terminated when window registry is implemented
@@ -113,57 +51,94 @@ void Window::open() {
     Window::initializeWindowCallbacks(*this);
 
     updateGLFWContext();
-    // TODO start: Refactor is needed
     if (glewInit() != GLEW_OK) {
         SHR_LOG_CORE(LogLevel::Critical, "Failed to initialize GLEW");
-    } // TODO end
+    }
 
-    getEventHandler().callEvent<event::WindowOpenedEvent>(*this);
+    event::WindowOpenedEvent e(*this);
+    getEventBus().publish(e);
 
-    // // temp
-    // glfwGetWindowPos(getGLFWwindow(), &m_posX, &m_posY);
+    if (!e.cancelled) {
+        while (!shouldBeClosed()) {
+            glClear(GL_COLOR_BUFFER_BIT);
+            glClearColor(0.12f, 0.6f, 0.12f, 1.0f);
 
-    while (!shouldBeClosed()) {
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.12f, 0.6f, 0.12f, 1.0f);
-        
-        getRenderer().render();
+            getRenderer().render();
 
-        glfwSwapBuffers(getGLFWwindow());
-        glfwPollEvents();
+            glfwSwapBuffers(getGLFWwindow());
+            glfwPollEvents();
+        }
     }
 }
 
+/**
+ * @brief Closes a window, destroying current GLFW OpenGL context (will be removed, when window registry is implemented)
+ * 
+ */
 void Window::close() {
     if (!getGLFWwindow()) {
         return;
     }
 
-    m_eventHandler.callEvent<event::WindowClosedEvent>(*this);
+    event::WindowClosedEvent e(*this);
+    getEventBus().publish(e);
 
+    if (e.cancelled) {
+        return;
+    }
     m_internalAttrib.shrineShouldClose = true;
-    // Should be checked
     glfwMakeContextCurrent(nullptr);
 }
 
-WindowAttributes& Window::getAttributes() { return m_attributes; }
-
-Window::renderer_type& Window::getRenderer() { return m_renderer; }
-
-Window::event_handler_type& Window::getEventHandler() { return m_eventHandler; }
-
+/**
+ * @brief Sets window title to @param title
+ * 
+ * @param title - a string, to be used as a window's title
+ */
 void Window::setTitle(const std::string& title) {
+    event::WindowTitleChangedEvent e(*this, title);
+    getEventBus().publish(e);
+
+    if (e.cancelled) {
+        return;
+    }
     m_attributes.title = title;
-    getEventHandler().callEvent<event::WindowTitleChangedEvent>(*this, m_attributes.title);
+    glfwSetWindowTitle(getGLFWwindow(), m_attributes.title.c_str());
 }
 
+/**
+ * @brief Sets window title to @param title
+ * 
+ * @param title - a string, to be used as a window's title
+ */
 void Window::setTitle(std::string&& title) {
+    event::WindowTitleChangedEvent e(*this, title);
+    getEventBus().publish(e);
+
+    if (e.cancelled) {
+        return;
+    }
     m_attributes.title = std::move(title);
-    getEventHandler().callEvent<event::WindowTitleChangedEvent>(*this, m_attributes.title);
+    glfwSetWindowTitle(getGLFWwindow(), m_attributes.title.c_str());
 }
 
-// temporary window-mode implementation
+
+/**
+ * @brief Asks window to enter a fullscreen mode
+ * 
+ */
 void Window::goFullscreen() {
+    if (getAttributes().fullscreen) {
+        return;
+    }
+
+    event::WindowFullscreenToggledEvent e(*this, true);
+    getEventBus().publish(e);
+
+    if (e.cancelled) {
+        return;
+    }
+
     internal_window_type* window = getGLFWwindow();
     SHR_ASSERT(window != nullptr);
     internal_monitor_type* monitor = glfwGetPrimaryMonitor();
@@ -172,7 +147,22 @@ void Window::goFullscreen() {
     glfwSetWindowMonitor(window, monitor, 0, 0, getAttributes().width, getAttributes().height, mode->refreshRate);
 }
 
+/**
+ * @brief Asks window to enter a windowed mode
+ * 
+ */
 void Window::goWindowed() {
+    if (!getAttributes().fullscreen) {
+        return;
+    }
+
+    event::WindowFullscreenToggledEvent e(*this, false);
+    getEventBus().publish(e);
+
+    if (e.cancelled) {
+        return;
+    }
+
     internal_window_type* window = getGLFWwindow();
     SHR_ASSERT(window != nullptr);
     int32_t width = getAttributes().width;
@@ -183,10 +173,6 @@ void Window::goWindowed() {
 // void Window::goWindowedFullscreen() {
 //     // noimpl
 // }
-
-Window::internal_window_type* Window::getGLFWwindow() { return m_internalAttrib.glfwWindow; }
-
-Window::internal_window_type* Window::getGLFWwindow() const { return m_internalAttrib.glfwWindow; }
 
 void Window::initializeWindowCallbacks(Window& window) {
     Window::internal_window_type* glfwWindow = window.getGLFWwindow();
@@ -202,35 +188,88 @@ void Window::keyInputCallback(internal_window_type* glfwWindow, int keycode, int
     if (!context) {
         return;
     }
-    switch (action) {
-        case GLFW_REPEAT: {context->getEventHandler().callEvent<event::KeyRepeatedEvent>(*context, keycode); break;}
-        case GLFW_PRESS: {context->getEventHandler().callEvent<event::KeyPressedEvent>(*context, keycode); break;}
-        case GLFW_RELEASE: {context->getEventHandler().callEvent<event::KeyReleasedEvent>(*context, keycode); break;}
+    switch(action) {
+        case GLFW_PRESS: {
+            event::KeyPressedEvent e(*context, keycode); 
+            context->getEventBus().publish(e);
+            break;
+        }
+        case GLFW_RELEASE: {
+            event::KeyReleasedEvent e(*context, keycode); 
+            context->getEventBus().publish(e);
+            break;
+        }
+        case GLFW_REPEAT: {
+            event::KeyRepeatedEvent e(*context, keycode); 
+            context->getEventBus().publish(e);
+            break;
+        }
     }
 }
 
+// Callback is used for GLFW-specific close actions, such as using window's close flag to close it
 void Window::windowCloseCallback(internal_window_type* glfwWindow) {
     Window* context = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
     if (!context) {
         return;
     }
-    context->getEventHandler().callEvent<event::WindowClosedEvent>(*context);
+
+    event::WindowClosedEvent e(*context);
+    context->getEventBus().publish(e);
+
+    if (e.cancelled) {
+        glfwSetWindowShouldClose(context->getGLFWwindow(), false);
+        e.getWindow().m_internalAttrib.shrineShouldClose = false;
+    }
 }
 
+/**
+ * @brief The size of a window can be changed with glfwSetWindowSize. 
+ * For windowed mode windows, this sets the size, in screen coordinates 
+ * of the content area or content area of the window. The window system 
+ * may impose limits on window size.
+ * 
+ * For full screen windows, the specified size becomes the new resolution 
+ * of the window's desired video mode. The video mode most closely matching 
+ * the new desired video mode is set immediately. The window is resized to 
+ * fit the resolution of the set video mode.
+ * 
+ * Important note! Do not pass the window size to glViewport or other pixel-based OpenGL calls. 
+ * The window size is in screen coordinates, not pixels. Use the framebuffer size, which is in 
+ * pixels, for pixel-based calls.
+ * 
+ * @param glfwWindow 
+ * @param width 
+ * @param height 
+ */
 void Window::windowSizeCallback(internal_window_type* glfwWindow, int width, int height) {
     Window* context = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
     if (!context) {
         return;
     }
-    context->getEventHandler().callEvent<event::WindowResizedEvent>(*context, (uint16_t)width, (uint16_t)height);
+
+    event::WindowResizedEvent e(*context, context->getAttributes().fullscreen, width, height);
+    context->getEventBus().publish(e);
 }
 
+/**
+ * @brief While the size of a window is measured in screen coordinates, OpenGL works with pixels. 
+ * The size you pass into glViewport, for example, should be in pixels. On some machines screen 
+ * coordinates and pixels are the same, but on others they will not be. There is a second set of 
+ * functions to retrieve the size, in pixels, of the framebuffer of a window.
+ * 
+ * @param glfwWindow 
+ * @param width 
+ * @param height 
+ */
 void Window::windowFramebufferSizeCallback(internal_window_type* glfwWindow, int width, int height) {
     Window* context = static_cast<Window*>(glfwGetWindowUserPointer(glfwWindow));
     if (!context) {
         return;
     }
-    context->getEventHandler().callEvent<event::WindowFramebufferChangedEvent>(*context, (uint16_t)width, (uint16_t)height);
+    
+    event::WindowFramebufferChangedEvent e(*context, width, height);
+    context->getEventBus().publish(e);
 }
 
 void Window::updatePosition() {
@@ -249,7 +288,7 @@ void Window::setVsync(bool enabled) {
      glfwSwapInterval(enabled);
 }
 
-bool Window::shouldBeClosed() const { 
+bool Window::shouldBeClosed() { 
     return m_internalAttrib.shrineShouldClose || glfwWindowShouldClose(getGLFWwindow()); 
 }
 

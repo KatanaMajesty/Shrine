@@ -7,7 +7,7 @@
 namespace shrine::event
 {
 
-class WindowFullscreenToggledEvent : public IEvent
+class SHRINE_API WindowFullscreenToggledEvent : public CancellableEvent
 {
 private:
     Window& m_window;
@@ -16,8 +16,6 @@ private:
 public:
     WindowFullscreenToggledEvent(Window& window, bool isFullscreen);
 
-    EVENT_INITIALIZE(Type::WINDOW_FULLSCREEN_TOGGLED);
-
     inline Window& getWindow() { return m_window; }
     inline bool isFullscreen() const { return m_fullscreen; }
 };
@@ -25,8 +23,7 @@ public:
 
 
 // called before the window is destructed
-// TODO: Make event cancellable, when implemented
-class WindowClosedEvent : public IEvent
+class SHRINE_API WindowClosedEvent : public CancellableEvent
 {
 private:
     Window& m_window;
@@ -34,24 +31,19 @@ private:
 public:
     WindowClosedEvent(Window& window);
 
-    EVENT_INITIALIZE(Type::WINDOW_CLOSED);
-
     inline Window& getWindow() { return m_window; }
 };
 
 
 
 // called before the window is opened
-// TODO: Make event cancellable, when implemented
-class WindowOpenedEvent : public IEvent
+class SHRINE_API WindowOpenedEvent : public CancellableEvent
 {
 private:
     Window& m_window;
 
 public:
     WindowOpenedEvent(Window& window);
-
-    EVENT_INITIALIZE(Type::WINDOW_OPENED);
 
     inline Window& getWindow() { return m_window; }
 };
@@ -64,45 +56,43 @@ public:
  * 
  * The window system may impose limits on window size.
  */
-class WindowResizedEvent : public IEvent
+class SHRINE_API WindowResizedEvent : public Event // Not cancellable yet
 {
 private:
     Window& m_window;
-    uint16_t m_x;
-    uint16_t m_y;
+    bool m_fullscreen;
+    uint16_t m_width;
+    uint16_t m_height;
 
 public:
-    WindowResizedEvent(Window& window, uint16_t x, uint16_t y);
-
-    EVENT_INITIALIZE(Type::WINDOW_RESIZED);
+    WindowResizedEvent(Window& window, bool isFullscreen, uint16_t width, uint16_t height);
 
     inline Window& getWindow() { return m_window; }
-    inline uint16_t getX() const { return m_x; }
-    inline uint16_t getY() const { return m_y; }
+    inline bool isFullscreen() const { return m_fullscreen; }
+    inline uint16_t getWidth() const { return m_width; }
+    inline uint16_t getHeight() const { return m_height; }
 };
 
 
 
-class WindowFramebufferChangedEvent : public IEvent
+class SHRINE_API WindowFramebufferChangedEvent : public Event // Not cancellable yet
 {
 private:
     Window& m_window;
-    uint16_t m_x;
-    uint16_t m_y;
+    uint16_t m_width;
+    uint16_t m_height;
 
 public:
-    WindowFramebufferChangedEvent(Window& window, uint16_t x, uint16_t y);
-
-    EVENT_INITIALIZE(Type::WINDOW_FRAMEBUFFER_RESIZED);
+    WindowFramebufferChangedEvent(Window& window, uint16_t width, uint16_t height);
 
     inline Window& getWindow() { return m_window; }
-    inline uint16_t getX() const { return m_x; }
-    inline uint16_t getY() const { return m_y; }
+    inline uint16_t getWidth() const { return m_width; }
+    inline uint16_t getHeight() const { return m_height; }
 };
 
 
 
-class WindowTitleChangedEvent : public IEvent
+class SHRINE_API WindowTitleChangedEvent : public CancellableEvent
 {
 private:
     Window& m_window;
@@ -110,8 +100,6 @@ private:
 
 public:
     WindowTitleChangedEvent(Window& window, std::string_view title);
-
-    EVENT_INITIALIZE(Type::WINDOW_TITLE_CHANGED);
 
     inline Window& getWindow() { return m_window; }
     inline std::string_view getTitle() const { return m_title; }

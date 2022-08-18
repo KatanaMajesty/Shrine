@@ -18,11 +18,15 @@
     #endif
 #endif
 
+#if defined(SHR_DEBUG)
+    #undef SHR_NASSERT // unnecessary actually
+#elif
+    #define SHR_NASSERT
+#endif
+
 #define BIT(x) (1 << x)
 
-#include <functional>
-#include <type_traits>
-
+// Requires <functional> and <type_traits> headers from STD to work! They are in PCH now
 namespace shrine
 {
 template<typename T> using ref_t = std::reference_wrapper<T>;

@@ -1,9 +1,7 @@
-#ifndef __SHRINE_ENGINE_LAYER_QUEUE_H__
-#define __SHRINE_ENGINE_LAYER_QUEUE_H__
+#ifndef __SHRINE_ENGINE_GRAPHICS_LAYER_QUEUE_H__
+#define __SHRINE_ENGINE_GRAPHICS_LAYER_QUEUE_H__
 
-#include <vector>
-
-#include "Engine/Renderer/layer.h"
+#include "Engine/Graphics/layer.h"
 
 namespace shrine
 {
@@ -26,4 +24,4 @@ public:
 
 }; // shrine
 
-#endif // __SHRINE_ENGINE_LAYER_QUEUE_H__
+#endif // __SHRINE_ENGINE_GRAPHICS_LAYER_QUEUE_H__

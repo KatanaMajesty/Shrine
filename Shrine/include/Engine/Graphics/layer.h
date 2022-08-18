@@ -1,7 +1,5 @@
-#ifndef __SHRINE_ENGINE_LAYER_H__
-#define __SHRINE_ENGINE_LAYER_H__
-
-#include <string>
+#ifndef __SHRINE_ENGINE_GRAPHICS_LAYER_H__
+#define __SHRINE_ENGINE_GRAPHICS_LAYER_H__
 
 namespace shrine
 {
@@ -18,4 +16,4 @@ public:
 
 }; // shrine
 
-#endif // __SHRINE_ENGINE_LAYER_H__
+#endif // __SHRINE_ENGINE_GRAPHICS_LAYER_H__

@@ -7,7 +7,8 @@
 namespace shrine::event
 {
 
-class SHRINE_API KeyPressedEvent : public IEvent
+// Called when key is pressed
+class SHRINE_API KeyPressedEvent : public Event
 {
 private:
     Window& m_window;
@@ -16,13 +17,14 @@ public:
     KeyPressedEvent(Window& window, uint32_t keycode);
     virtual ~KeyPressedEvent() = default;
 
-    EVENT_INITIALIZE(Type::KEY_PRESSED)
-
     inline uint32_t getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
 };
 
-class SHRINE_API KeyReleasedEvent : public IEvent
+
+
+// Called when key is released
+class SHRINE_API KeyReleasedEvent : public Event
 {
 private:
     Window& m_window;
@@ -31,13 +33,15 @@ public:
     KeyReleasedEvent(Window& window, uint32_t keycode);
     virtual ~KeyReleasedEvent() = default;
 
-    EVENT_INITIALIZE(Type::KEY_RELEASED);
-
     inline uint32_t getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
 };
 
-class SHRINE_API KeyRepeatedEvent : public IEvent
+
+
+// Called when key is pressed repeatedly
+// Importantly, KeyPressedEvent won't be called simultaneously with this event
+class SHRINE_API KeyRepeatedEvent : public Event
 {
 private:
     Window& m_window;
@@ -45,8 +49,6 @@ private:
 public:
     KeyRepeatedEvent(Window& window, uint32_t keycode);
     virtual ~KeyRepeatedEvent() = default;
-
-    EVENT_INITIALIZE(Type::KEY_REPEATED);
 
     inline uint32_t getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }

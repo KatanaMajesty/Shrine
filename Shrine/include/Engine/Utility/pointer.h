@@ -1,8 +1,6 @@
 #ifndef __SHRINE_ENGINE_UTILITY_POINTER__
 #define __SHRINE_ENGINE_UTILITY_POINTER__
 
-#include <memory>
-
 namespace shrine
 {
 

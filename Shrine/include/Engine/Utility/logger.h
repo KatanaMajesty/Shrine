@@ -1,12 +1,6 @@
 #ifndef __SHRINE_ENGINE_UTILITY_LOGGER_H__
 #define __SHRINE_ENGINE_UTILITY_LOGGER_H__
 
-#include <string_view>
-#include <unordered_map>
-
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 #include "Engine/Common/common_definitions.h"
 #include "Engine/Utility/pointer.h"
 

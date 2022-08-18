@@ -14,6 +14,8 @@ set(CMAKE_CXX_STANDARD ${SHR_CXX_STD})
 
 add_library(shrine SHARED ${SOURCE})
 
+target_precompile_headers(shrine PUBLIC include/shrine_pch.h)
+
 if (UNIX)
     target_compile_definitions(shrine PUBLIC SHR_PLATFORM_UNIX)
 elseif(WIN32)
