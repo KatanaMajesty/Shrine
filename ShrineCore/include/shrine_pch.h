@@ -7,10 +7,16 @@
 #include <iostream>
 #include <functional>
 #include <string_view>
+#include <utility>
+#include <thread>
 
 // STL containers
+#include <map>
 #include <unordered_map>
 #include <vector>
+#include <queue>
+#include <stack>
+#include <list>
 
 #include <memory>
 #include <filesystem> // needed in assert
@@ -28,5 +34,6 @@
 // SPDLOG stuff
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/fmt/ostr.h> // must be included
 
 #endif // __SHRINE_PRECOMPILED_HEADER_H__

@@ -10,22 +10,54 @@ public:
     WindowListener() = default;
     ~WindowListener() = default;
 
+    
+};
+
+class SandboxLayer : public Layer
+{
+public:
+    SandboxLayer(event_bus_type& eventBus) 
+        : Layer(eventBus, "Sandbox Layer") 
+    {
+        subscribe(&SandboxLayer::onKeyPressedEvent);
+        subscribe(&SandboxLayer::onWindowClosed);
+    }
+    ~SandboxLayer() = default;
+
+    virtual void attach() override {
+        SHR_LOG_CORE_DEBUG("(Layer \"{}\"): Successfully attached!", getName());
+    }
+
+    virtual void update() override {
+        SHR_LOG_CORE_DEBUG("(Layer \"{}\"): Updated!", getName());
+    }
+
+    virtual void detatch() override {
+        SHR_LOG_CORE_DEBUG("(Layer \"{}\"): Successfully detatched!", getName());
+    }
+
     bool onKeyPressedEvent(event::KeyPressedEvent& event) {
+        Window& window = event.getWindow();
         if (event.getKeycode() == SHR_KEY_ESCAPE) {
-            event.getWindow().close();
+            window.close();
+            return true;
+        } else if (event.getKeycode() == SHR_KEY_F11) {
+            WindowAttributes& attr = window.getAttributes();
+            attr.fullscreen = !attr.fullscreen;
+            if (attr.fullscreen) {
+                window.goFullscreen();
+            } else {
+                window.goWindowed();
+            }
             return true;
         }
         return false;
     }
 
     bool onWindowClosed(event::WindowClosedEvent& event) {
-        SHR_LOG(SHR_LOGGER_USER, LogLevel::Trace, "Window \"{}\" will be closed!", event.getWindow().getAttributes().title);
+        SHR_LOG("USER_LOGGER", LogLevel::Trace, "Window \"{}\" will be closed!", event.getWindow().getAttributes().title);
 
-        if (false) {
-            event.cancelled = true;
-        }
-
-        return true; // mark event as handled
+        return false; // mark event as handled
     }
 };
 
@@ -35,22 +67,18 @@ private:
     WindowListener m_windowListener;
 
 public:
-    SandboxApp() : Application() 
+    SandboxApp() : Application(ApplicationAttributes{.name = "Sandbox Application"}) 
     {
-    }
+        event_bus_type& eventBus = getEventBus();
 
-    virtual void run() override {        
-        getEventBus().subscribe(&m_windowListener, &WindowListener::onKeyPressedEvent);
-        getEventBus().subscribe(&m_windowListener, &WindowListener::onWindowClosed);
-        getWindow().open();
+        getWindow().getLayerQueue().pushLayer<SandboxLayer>(eventBus);
     }
 };
 
 SharedPointer<Application> Main(int argc, char** argv) {
     SharedPointer<SandboxApp> app = makeShared<SandboxApp>();
-    Logger::createLogger<Logger>(SHR_LOGGER_USER, "USER_LOGGER");
-    Logger::getLogger(SHR_LOGGER_USER)->setLevel(LogLevel::Trace);
-    SHR_LOG(SHR_LOGGER_USER, LogLevel::Trace, "Hello, Log!");
+    SHR_CREATE_LOGGER("USER_LOGGER", LogLevel::Trace, Logger::getDefaultPattern());
+    SHR_LOG("USER_LOGGER", LogLevel::Trace, "Hello, Log!");
     return app;
 }
 

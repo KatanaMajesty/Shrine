@@ -1,6 +1,6 @@
-[submodule "Shrine/Vendor/glfw"]
-	path = Shrine/Vendor/glfw
+[submodule "ShrineCore/Vendor/glfw"]
+	path = ShrineCore/Vendor/glfw
 	url = https://github.com/glfw/glfw
-[submodule "Shrine/Vendor/spdlog"]
-	path = Shrine/Vendor/spdlog
+[submodule "ShrineCore/Vendor/spdlog"]
+	path = ShrineCore/Vendor/spdlog
 	url = https://github.com/gabime/spdlog

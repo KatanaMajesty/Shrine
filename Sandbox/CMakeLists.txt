@@ -4,5 +4,5 @@ project(sandbox VERSION 0.0.1 LANGUAGES CXX)
 add_executable(sandbox sandbox.cpp)
 target_include_directories(sandbox PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../Shrine/include)
 target_link_libraries(sandbox
-    shrine
+    shrine-core
 )

@@ -2,15 +2,13 @@
 #define __SHRINE_ENGINE_EVENTS_EVENT_BUS_H__
 
 #include "Engine/Common/common_definitions.h"
-#include "Engine/Utility/pointer.h"
-#include "Engine/Utility/logger.h"
+#include "Engine/Common/logger.h"
 #include "Engine/Event/event.h"
-#include "Engine/Common/assert.h"
 
 namespace shrine::event
 {
 
-class EventSubscriber
+class SHRINE_API EventSubscriber
 {
 public:
     EventSubscriber() = default;
@@ -23,7 +21,11 @@ private:
     virtual bool invoke(Event& event) = 0;
 };
 
+
+
 template<typename T> struct isEvent : isBaseOf<Event, T> {};
+
+
 
 template<typename Receiver, typename EventType>
 class EventHandler : public EventSubscriber
@@ -53,7 +55,9 @@ private:
     listener_callable m_callable;
 };
 
-class EventBus
+
+
+class SHRINE_API EventBus
 {
 public:
     template<typename Receiver, typename EventType> using listener_callable = bool(Receiver::*)(EventType&);
@@ -73,15 +77,12 @@ public:
         auto entry = m_eventMap.find(typeid(EventType));
         if (entry != m_eventMap.end()) {
             subscribers& list = entry->second;
-            bool handled = false;
-            for (const subscriber_type& value : list) {
-                handled = value->dispatch(event);
-                if (handled) {
+            // we should iterate from end to beginning, so that all events are handled in order
+            for (subscribers::reverse_iterator it = list.rbegin(); it != list.rend(); ++it) {
+                if ((*it)->dispatch(event)) { // if handled - break the loop
+                    SHR_LOG_CORE_TRACE("{}: successfully handled by receiver!", event);
                     break;
                 }
-            }
-            if (!handled) {
-                SHR_LOG_CORE(LogLevel::Info, "Event of type \"{}\" was not handled by any listener!", typeid(event).name());
             }
         }
     }
@@ -101,7 +102,7 @@ public:
 
             list.erase(std::remove_if(list.begin(), list.end(), [&](const subscriber_type& value) -> bool {
                 return (*static_cast<EventHandler<Receiver, EventType>*>(value.get())) == comparator;
-            })) ;
+            }), list.end());
         }
     }
 

@@ -18,6 +18,10 @@ public:
 
     inline Window& getWindow() { return m_window; }
     inline bool isFullscreen() const { return m_fullscreen; }
+
+    virtual std::string toString() const override {
+        return "WindowFullscreenToggledEvent";
+    }
 };
 
 
@@ -32,6 +36,10 @@ public:
     WindowClosedEvent(Window& window);
 
     inline Window& getWindow() { return m_window; }
+
+    virtual std::string toString() const override {
+        return "WindowClosedEvent";
+    }
 };
 
 
@@ -46,6 +54,10 @@ public:
     WindowOpenedEvent(Window& window);
 
     inline Window& getWindow() { return m_window; }
+
+    virtual std::string toString() const override {
+        return "WindowOpenedEvent";
+    }
 };
 
 
@@ -71,6 +83,10 @@ public:
     inline bool isFullscreen() const { return m_fullscreen; }
     inline uint16_t getWidth() const { return m_width; }
     inline uint16_t getHeight() const { return m_height; }
+
+    virtual std::string toString() const override {
+        return "WindowResizedEvent";
+    }
 };
 
 
@@ -88,6 +104,10 @@ public:
     inline Window& getWindow() { return m_window; }
     inline uint16_t getWidth() const { return m_width; }
     inline uint16_t getHeight() const { return m_height; }
+
+    virtual std::string toString() const override {
+        return "WindowFramebufferChangedEvent";
+    }
 };
 
 
@@ -103,6 +123,10 @@ public:
 
     inline Window& getWindow() { return m_window; }
     inline std::string_view getTitle() const { return m_title; }
+    
+    virtual std::string toString() const override {
+        return "WindowTitleChangedEvent";
+    }
 };
 
 }; // shrine::event

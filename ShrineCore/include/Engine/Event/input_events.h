@@ -19,6 +19,10 @@ public:
 
     inline uint32_t getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
+
+    virtual std::string toString() const override {
+        return "KeyPressedEvent";
+    }
 };
 
 
@@ -35,6 +39,10 @@ public:
 
     inline uint32_t getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
+    
+    virtual std::string toString() const override {
+        return "KeyReleasedEvent";
+    }
 };
 
 
@@ -52,6 +60,10 @@ public:
 
     inline uint32_t getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
+
+    virtual std::string toString() const override {
+        return "KeyRepeatedEvent";
+    }
 };
 
 }; // shrine::event
