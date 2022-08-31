@@ -6,6 +6,7 @@
 #include "Engine/Event/event.h"
 #include "Engine/Event/event_bus.h"
 #include "Engine/Graphics/layer_queue.h"
+// #include "Engine/Common/input_queries.h"
 
 namespace shrine
 {
@@ -46,6 +47,8 @@ private:
     ScopedPointer<LayerQueue> m_layerQueue;
 
 public:
+    friend class ShrineIO;
+
     /**
      * @brief Construct a new Window object
      * 

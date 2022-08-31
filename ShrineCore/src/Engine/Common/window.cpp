@@ -197,17 +197,17 @@ void Window::initializeCallbacks() {
         }
         switch(action) {
             case GLFW_PRESS: {
-                event::KeyPressedEvent e(*window, keycode); 
+                event::KeyPressedEvent e(*window, static_cast<Keycode>(keycode)); 
                 window->getEventBus().publish(e);
                 break;
             }
             case GLFW_RELEASE: {
-                event::KeyReleasedEvent e(*window, keycode); 
+                event::KeyReleasedEvent e(*window, static_cast<Keycode>(keycode)); 
                 window->getEventBus().publish(e);
                 break;
             }
             case GLFW_REPEAT: {
-                event::KeyRepeatedEvent e(*window, keycode); 
+                event::KeyRepeatedEvent e(*window, static_cast<Keycode>(keycode)); 
                 window->getEventBus().publish(e);
                 break;
             }

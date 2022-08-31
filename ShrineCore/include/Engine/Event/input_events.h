@@ -3,6 +3,7 @@
 #include "Engine/Common/common_definitions.h"
 #include "Engine/Common/window.h"
 #include "Engine/Event/event.h"
+#include "Engine/Utility/keyboard.h"
 
 namespace shrine::event
 {
@@ -12,12 +13,12 @@ class SHRINE_API KeyPressedEvent : public Event
 {
 private:
     Window& m_window;
-    uint32_t m_keycode;
+    const Keycode m_keycode;
 public:
-    KeyPressedEvent(Window& window, uint32_t keycode);
+    KeyPressedEvent(Window& window, Keycode keycode);
     virtual ~KeyPressedEvent() = default;
 
-    inline uint32_t getKeycode() const { return m_keycode; }
+    inline Keycode getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
 
     virtual std::string toString() const override {
@@ -32,12 +33,12 @@ class SHRINE_API KeyReleasedEvent : public Event
 {
 private:
     Window& m_window;
-    uint32_t m_keycode;
+    const Keycode m_keycode;
 public:
-    KeyReleasedEvent(Window& window, uint32_t keycode);
+    KeyReleasedEvent(Window& window, Keycode keycode);
     virtual ~KeyReleasedEvent() = default;
 
-    inline uint32_t getKeycode() const { return m_keycode; }
+    inline Keycode getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
     
     virtual std::string toString() const override {
@@ -53,12 +54,12 @@ class SHRINE_API KeyRepeatedEvent : public Event
 {
 private:
     Window& m_window;
-    uint32_t m_keycode;
+    const Keycode m_keycode;
 public:
-    KeyRepeatedEvent(Window& window, uint32_t keycode);
+    KeyRepeatedEvent(Window& window, Keycode keycode);
     virtual ~KeyRepeatedEvent() = default;
 
-    inline uint32_t getKeycode() const { return m_keycode; }
+    inline Keycode getKeycode() const { return m_keycode; }
     inline Window& getWindow() { return m_window; }
 
     virtual std::string toString() const override {

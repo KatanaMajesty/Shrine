@@ -3,6 +3,7 @@
 #include "Engine/Common/common_definitions.h"
 #include "Engine/Common/window.h"
 #include "Engine/Event/event.h"
+#include "Engine/Utility/keyboard.h"
 
 namespace shrine::event
 {

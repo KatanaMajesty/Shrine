@@ -38,10 +38,10 @@ public:
 
     bool onKeyPressedEvent(event::KeyPressedEvent& event) {
         Window& window = event.getWindow();
-        if (event.getKeycode() == SHR_KEY_ESCAPE) {
+        if (event.getKeycode() == Keycode::Escape) {
             window.close();
             return true;
-        } else if (event.getKeycode() == SHR_KEY_F11) {
+        } else if (event.getKeycode() == Keycode::F11) {
             WindowAttributes& attr = window.getAttributes();
             attr.fullscreen = !attr.fullscreen;
             if (attr.fullscreen) {
